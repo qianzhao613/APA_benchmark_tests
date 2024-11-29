@@ -1,0 +1,16 @@
+# ignore all .bam file
+*.bam
+*.bai
+*.fq
+*.fa
+*.fai
+*.gtf
+*.qs
+*.fastq
+*.fasta
+*.gff
+*.gtf
+*.db
+*.Rds
+*.rds
+*.bed
