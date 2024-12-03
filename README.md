@@ -21,6 +21,10 @@ The pipeline is divided into two main parts:
    + DESeq2
    + argparse
 
+## Directory structure
+
+![alt text](readme_figures/directory_structure.png)
+
 ## Usage
 
 ```
