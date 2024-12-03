@@ -37,8 +37,8 @@ workflow {
 	win_size_channel = channel.from(win_sizes)
 
 	// annotation 
-	apa_annotation(benchmark_rscript, gtf_file, apa_output, barcode_file, sample_name, apa_method, params.core_num)
-	//apa_annotation = channel.fromPath("${params.annotation_folder}/${sample_name}/${apa_method}_peak_annotations_by_SCAPE.qs", type: "file", checkIfExists: true)
+	//apa_annotation(benchmark_rscript, gtf_file, apa_output, barcode_file, sample_name, apa_method, params.core_num)
+	apa_annotation = channel.fromPath("${params.annotation_folder}/${sample_name}/${apa_method}_peak_annotations_by_SCAPE.qs", type: "file", checkIfExists: true)
 	method_list = channel.of("Sierra", "scAPA", "polyApipe", "scAPAtrap", "SCAPTURE", "MAAPER","SCAPE")
 
 	def overlap_genes_file = file("${params.annotation_folder}/${sample_name}/${sample_name}_overlap_gene_list.qs")
@@ -49,7 +49,7 @@ workflow {
 		overlap_genes_channel.view { "File exists, importing: $it" }
 	} else {
 		// If file does not exist, run the process
-		overlap_genes_channel = overlap_genes(benchmark_rscript, method_list, sample_name, params.core_num, apa_annotation)
+		overlap_genes_channel = overlap_genes(benchmark_rscript, method_list, sample_name, params.core_num)
 		overlap_genes_channel.view { "File does not exist, running process to generate: $it" }
 	}
 

@@ -2,14 +2,10 @@
 *.bam
 *.bai
 *.fq
-*.fa
-*.fai
-*.gtf
-*.qs
 *.fastq
 *.fasta
+*.fa.gz
 *.gff
-*.gtf
 *.db
 *.Rds
 *.rds

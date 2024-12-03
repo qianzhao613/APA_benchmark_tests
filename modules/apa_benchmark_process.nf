@@ -93,7 +93,6 @@ process overlap_genes {
 				val method_list
 				val sample_name
 				val core_num
-				path annotation_file
 
         output:
 				path "${sample_name}_overlap_gene_list.qs", emit: overlap_genes
