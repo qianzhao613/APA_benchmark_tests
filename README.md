@@ -3,6 +3,9 @@ This is a benchmark pipeline based on Nextflow, designed to evaluate the perform
 
 ## Overview
 
+![pipeline overview](readme_figures/Figure1B_renew.png)
+
+
 The pipeline is divided into two main parts:
 
 1. **Data Preparation**: This part reads the outputs from APA analysis tools and ONT (Oxford Nanopore Technologies), converts them into a standard format, and normalizes the data.
@@ -23,7 +26,7 @@ The pipeline is divided into two main parts:
 
 ## Directory structure
 
-![alt text](readme_figures/directory_structure.png)
+![directory structure](readme_figures/directory_structure.png)
 
 ## Usage
 
@@ -32,6 +35,3 @@ nextflow run main.nf --sample_name MOBV1 --apa_method Sierra --core_num 4 --win_
 ```
 
 ## Citation
-
-## Contact
-
