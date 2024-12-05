@@ -17,17 +17,30 @@ The pipeline is divided into two main parts:
   
 ## Requirments
 
-1. Install nextflow
+1. Install Nextflow (version 23.04.3.5875)
 2. Install R (version > 4.1)
 3. Install some R packages:
    + GenomicRanges
    + DESeq2
    + argparse
+   + qs
+   + import
 
 ## Directory structure
 
 ![directory structure](readme_figures/directory_structure.png)
 
+This pipeline consists of four directories: 
+
+	+ bin: R scripts 
+	+ modules: Nextflow processes 
+	+ Reference: annotation files (gtf and fasta) from Cell Ranger 
+	+ data: store the required sample data, named in the format ${sample_name}_illumina. The sample data includes: 
+		- outputs from various APA analysis methods, 
+		- Illumina data (from Cell Ranger), 
+		- ONT data, 
+		- metadata.
+		
 ## Usage
 
 ```
