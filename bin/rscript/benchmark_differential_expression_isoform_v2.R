@@ -4,10 +4,6 @@ library(DESeq2, warn.conflicts = F)
 suppressPackageStartupMessages(library(GenomicRanges, warn.conflicts = F))
 library(argparse, quietly = T, warn.conflicts = F)
 
-# functions ---------------------------------------------------------------
-import::here("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/bin/rscript/benchmark_functions.R",
-             create_pseudobulk, two_cluster_deseq2, bed2gr, peak2bed, matched_sites_expression)
-
 # parameters --------------------------------------------------------------
 parser <- ArgumentParser(description='Differential APA')
 
@@ -58,6 +54,11 @@ parser$add_argument('--cv',
                     action='store',
                     default="none",
                     help='Users can choose CV cutoff.')
+parser$add_argument('--pipelinedir', 
+                    dest='pipelinedir',
+                    action='store',
+                    default='.',
+                    help='the pipeline folder')
 args <- parser$parse_args()
 
 ## input load once
@@ -70,6 +71,7 @@ apa_reads_cutoff <- args[["apa_cutoff"]]
 win_size <- args[["win"]]
 gene_list <- args[["gene_list"]]
 cv_cutoff <- args[["cv"]]
+pipeline_dir <- args[["pipelinedir"]]
 
 padj_threshold <- 0.05
 single_tail_compare <- FALSE
@@ -77,11 +79,15 @@ multi_tail_compare <- FALSE
 search_top_gene <- FALSE 
 apa_top_gene_num <- 0 
 
+# functions ---------------------------------------------------------------
+import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"),
+             create_pseudobulk, two_cluster_deseq2, bed2gr, peak2bed, matched_sites_expression)
+			 
 # annotation and metadata -------------------------------------------------
-mm10_cr_gtf <- qs::qread("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/reference/mm10_cr_annot.qs", nthreads = core_num)
+mm10_cr_gtf <- qs::qread(glue::glue("{pipeline_dir}/reference/mm10_cr_annot.qs"), nthreads = core_num)
 
 ## cell metadata
-cell_metadata_file <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs") 
+cell_metadata_file <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs") 
 cell_metadata <- qs::qread(file = cell_metadata_file, nthreads = core_num) %>% dplyr::mutate(cell_ids = gsub("-1", "", cell_ids)) # need to REMOVE "-1" if not remove before
 
 high_percent_types <- cell_metadata %>% dplyr::group_by(seurat_clusters) %>% dplyr::summarise(n = dplyr::n()) %>% dplyr::arrange(n) %>% dplyr::slice_tail(n=2)
@@ -93,7 +99,7 @@ gene_list <- qs::qread(gene_list, nthreads = core_num)
 
 # nanopore ----------------------------------------------------------------
 ## read nanopore data, convert into ground truth polyAsite matrix (time comsumming probably make an independent step) and filter all zero rows
-nanopore_file <-  glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_isomatrix.txt.gz")
+nanopore_file <-  glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_isomatrix.txt.gz")
 nanopore_matrix <- vroom::vroom(nanopore_file, show_col_types = F) %>%
   dplyr::filter(!is.na(transcriptId)) %>%
   dplyr::mutate(transcriptId = gsub("\\.[0-9]{1,2}", "", transcriptId)) %>%
@@ -112,7 +118,7 @@ if(cv_cutoff == "none"){
   print("No CV filter for ONT data!")
   
 } else {
-  isoform_table_file <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/APA_benchmark_tests/output/apa_annotation/{sample_name}/{sample_name}_{cell_type}_normalized_nanopore_isoform_table.qs")
+  isoform_table_file <- glue::glue("{pipeline_dir}/output/apa_annotation/{sample_name}/{sample_name}_{cell_type}_normalized_nanopore_isoform_table.qs")
   cv_cutoff <- as.numeric(cv_cutoff)
   transcript_ids <- qs::qread(file = isoform_table_file, nthreads = core_num) %>%
     dplyr::filter(cv < cv_cutoff) %>%

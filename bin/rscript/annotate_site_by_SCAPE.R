@@ -3,10 +3,6 @@
 library(dplyr, warn.conflicts = F)
 library(argparse, warn.conflicts = F)
 
-# functions ---------------------------------------------------------------
-import::here("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/bin/rscript/benchmark_functions.R", 
-             apa_annotation)
-
 # parameters --------------------------------------------------------------
 parser <- ArgumentParser(description='Identification performance')
 
@@ -40,7 +36,11 @@ parser$add_argument('--barcodes',
                     action='store',
                     default='genes.gtf',
                     help='the genome annotation file (gtf formart)')
-
+parser$add_argument('--pipelinedir', 
+                    dest='pipelinedir',
+                    action='store',
+                    default='.',
+                    help='the pipeline folder')
 args <- parser$parse_args()
 
 ## input load once
@@ -50,7 +50,11 @@ gtf_file <- args[["gtf"]]
 apa_output_dir <- args[["APAdir"]] 
 barcode_file <- args[["barcodes"]] 
 core_num <- args[["nthreads"]]
-
+pipeline_dir <- args[["pipelinedir"]]
+# functions ---------------------------------------------------------------
+import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), 
+             apa_annotation)
+			 
 # scape annotation -------------------------------------------------------------------
 # # It will consume a lot of time if it is the first time to annotate.
 

@@ -28,7 +28,11 @@ parser$add_argument('--nthreads',
                     type='integer',
                     default=8,
                     help='the number of threads (default: 8)')
-
+parser$add_argument('--pipelinedir', 
+                    dest='pipelinedir',
+                    action='store',
+                    default='.',
+                    help='the pipeline folder')
 args <- parser$parse_args()
 
 ## input load once
@@ -36,6 +40,7 @@ core_num <- args[["nthreads"]]
 sample_name <- args[["sample_name"]] 
 apa_method_vector <- args[["method_list"]] 
 annot_file <- args[["APAannotation"]]
+pipeline_dir <- args[["pipelinedir"]]
 
 genes_list <- lapply(apa_method_vector, function(apa_method){
   

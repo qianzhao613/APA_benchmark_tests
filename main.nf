@@ -22,8 +22,8 @@ workflow {
 	def apa_method = params.apa_method
 	def gtf_file = file(params.gtf_file)
 	def benchmark_rscript = file(params.benchmark_rscript)
-	apa_output = channel.fromPath("${launchDir}/../data/${sample_name}_illumina/*_${apa_method}_*", type: "dir", checkIfExists: true)
-	barcode_file = channel.fromPath("${launchDir}/../data/${sample_name}_illumina/${sample_name}_barcodes.tsv*", type: "file", checkIfExists: true)
+	apa_output = channel.fromPath("${launchDir}/data/${sample_name}_illumina/*_${apa_method}_*", type: "dir", checkIfExists: true)
+	barcode_file = channel.fromPath("${launchDir}/data/${sample_name}_illumina/${sample_name}_barcodes.tsv*", type: "file", checkIfExists: true)
 
 	// Emit win_sizes to channel
 	if (params.win_size instanceof String && params.win_size.startsWith('[') && params.win_size.endsWith(']')) { //
@@ -37,7 +37,7 @@ workflow {
 	win_size_channel = channel.from(win_sizes)
 
 	// annotation 
-	//apa_annotation(benchmark_rscript, gtf_file, apa_output, barcode_file, sample_name, apa_method, params.core_num)
+	//apa_annotation(benchmark_rscript, gtf_file, apa_output, barcode_file, sample_name, apa_method, params.core_num, params.pipe_folder)
 	apa_annotation = channel.fromPath("${params.annotation_folder}/${sample_name}/${apa_method}_peak_annotations_by_SCAPE.qs", type: "file", checkIfExists: true)
 	method_list = channel.of("Sierra", "scAPA", "polyApipe", "scAPAtrap", "SCAPTURE", "MAAPER","SCAPE")
 
@@ -49,7 +49,7 @@ workflow {
 		overlap_genes_channel.view { "File exists, importing: $it" }
 	} else {
 		// If file does not exist, run the process
-		overlap_genes_channel = overlap_genes(benchmark_rscript, method_list, sample_name, params.core_num)
+		overlap_genes_channel = overlap_genes(benchmark_rscript, method_list, sample_name, params.core_num, params.pipe_folder)
 		overlap_genes_channel.view { "File does not exist, running process to generate: $it" }
 	}
 
@@ -66,7 +66,7 @@ workflow {
 		nanopore_normalization_channel.view { "File exists, importing: $it" }
 	} else {
 		// If file does not exist, run the process
-		nanopore_normalization_channel = nanopore_normalization(benchmark_rscript, sample_name, params.core_num)
+		nanopore_normalization_channel = nanopore_normalization(benchmark_rscript, sample_name, params.core_num, params.pipe_folder)
 		nanopore_normalization_channel.view { "File does not exist, running process to generate: $it" }
 	}
 	
@@ -79,7 +79,7 @@ workflow {
 		apa_normalization_channel.view { "File2: $it" }
 	} else {
 		// If file does not exist, run the process
-		apa_matrix_channel = apa_normalization(benchmark_rscript, apa_output, apa_annotation, sample_name, apa_method, params.core_num) 
+		apa_matrix_channel = apa_normalization(benchmark_rscript, apa_output, apa_annotation, sample_name, apa_method, params.core_num, params.pipe_folder) 
 
 		apa_count_channel = apa_matrix_channel.map { it[0] }
 		apa_normalization_channel = apa_matrix_channel.map { it[1] }
@@ -97,7 +97,7 @@ workflow {
 		nanopore_filter_channel.view { "File exists, importing: $it" }
 	} else {
 		// If file does not exist, run the process
-		nanopore_filter_channel = nanopore_filter(benchmark_rscript, nanopore_normalization_channel, sample_name, params.core_num, params.cell_type)
+		nanopore_filter_channel = nanopore_filter(benchmark_rscript, nanopore_normalization_channel, sample_name, params.core_num, params.cell_type, params.pipe_folder)
 		nanopore_filter_channel.view { "File does not exist, running process to generate: $it" }
 	}
 	
@@ -115,14 +115,14 @@ workflow {
 	win_cv = win_size_channel.flatten().combine(cv_cutoff_channel.flatten())
 
 	// Benchmark 1: Identification
-	identification(benchmark_rscript, apa_count_channel.first(), sample_name, apa_method, win_cv, overlap_genes_channel.first(), params.core_num)
+	identification(benchmark_rscript, apa_count_channel.first(), sample_name, apa_method, win_cv, overlap_genes_channel.first(), params.core_num, params.pipe_folder)
 
 	// Benchmark 2: Quantification
 
-	quantification(benchmark_rscript, nanopore_normalization_channel.first(), apa_normalization_channel.first(), sample_name, apa_method, win_cv, overlap_genes_channel.first(), params.cell_type, params.core_num)
+	quantification(benchmark_rscript, nanopore_normalization_channel.first(), apa_normalization_channel.first(), sample_name, apa_method, win_cv, overlap_genes_channel.first(), params.cell_type, params.core_num, params.pipe_folder)
 
 	// Benchmark 3: Differential expression
-	differential_expression(benchmark_rscript, apa_count_channel.first(), sample_name, apa_method, win_size_channel, overlap_genes_channel.first(), params.core_num)
+	differential_expression(benchmark_rscript, apa_count_channel.first(), sample_name, apa_method, win_size_channel, overlap_genes_channel.first(), params.core_num, params.pipe_folder)
 }
 
 
@@ -133,8 +133,4 @@ workflow.onComplete {
 workflow.onError {
     println "Pipeline stopped with following error: $workflow.errorMessage"
 }
-
-
-
-
 

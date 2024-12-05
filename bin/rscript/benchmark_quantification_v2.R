@@ -3,13 +3,6 @@
 library(dplyr, quietly = T, warn.conflicts = F)
 suppressPackageStartupMessages(library(GenomicRanges, warn.conflicts = F))
 library(argparse, quietly = T, warn.conflicts = F)
-# functions ---------------------------------------------------------------
-import::here("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/bin/rscript/benchmark_functions.R", 
-             apa_matrix_extract,
-             generate_cell_list,
-             peak2bed, 
-             bed2gr,
-             matched_sites_expression)
 
 # parameters --------------------------------------------------------------
 parser <- ArgumentParser(description='Quantification performance')
@@ -71,7 +64,11 @@ parser$add_argument('--cv',
                     action='store',
                     default="none",
                     help='Users can choose CV cutoff.')
-
+parser$add_argument('--pipelinedir', 
+                    dest='pipelinedir',
+                    action='store',
+                    default='.',
+                    help='the pipeline folder')
 args <- parser$parse_args()
 
 ## input load once
@@ -86,6 +83,7 @@ apa_normalization_file <- args[["APA_data"]]
 win_size <- args[["win"]]
 cv_cutoff <- args[["cv"]]
 gene_list <- args[["gene_list"]]
+pipeline_dir <- args[["pipelinedir"]]
 
 single_tail_compare <- FALSE
 multi_tail_compare <- FALSE #TRUE
@@ -93,18 +91,23 @@ search_top_gene <- FALSE #TRUE
 
 apa_top_gene_num <- 0 # 3000, 6000, 9000
 
-mm10_cr_gtf <- qs::qread("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/reference/mm10_cr_annot.qs", nthreads = core_num)
-
-# identification_dir <- "/mnt/mr01-home01/m57549qz/scratch/nextflow_test/identification_validation"
-# quantification_dir <- "/mnt/mr01-home01/m57549qz/scratch/nextflow_test/quantification_validation"
+mm10_cr_gtf <- qs::qread(glue::glue("{pipeline_dir}/reference/mm10_cr_annot.qs"), nthreads = core_num)
 
 # match_matrix_output_dir <- glue::glue("{output_dir}/match_sites_expression")
 # 
 # if(dir.exists(match_matrix_output_dir)){print("Dir exists!")} else {dir.create(match_matrix_output_dir, recursive = T)}
 
+# functions ---------------------------------------------------------------
+import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), 
+             apa_matrix_extract,
+             generate_cell_list,
+             peak2bed, 
+             bed2gr,
+             matched_sites_expression)
+
 # cell metadata ---------------------------------------------------------
 
-cell_metadata_file <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs") 
+cell_metadata_file <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs") 
 
 cell_metadata <- qs::qread(file = cell_metadata_file, nthreads = core_num) %>% dplyr::mutate(cell_ids = gsub("-1", "", cell_ids)) # need to REMOVE "-1" if not remove before
 cell_ids <- generate_cell_list(cell_metadata = cell_metadata, type = cell_type, core_num = core_num)
@@ -148,7 +151,7 @@ if(isTRUE(single_tail_compare)){
   
 }
 
-isoform_table_file <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/APA_benchmark_tests/output/apa_annotation/{sample_name}/{sample_name}_{cell_type}_normalized_nanopore_isoform_table.qs")
+isoform_table_file <- glue::glue("{pipeline_dir}/output/apa_annotation/{sample_name}/{sample_name}_{cell_type}_normalized_nanopore_isoform_table.qs")
 
 if(cv_cutoff == "none"){
   
@@ -167,7 +170,6 @@ if(cv_cutoff == "none"){
 
 # read APA data -----------------------------------------------------------
 ## apa expression matrix
-# apa_normalization_file <- glue::glue("apa_normalization/{sample_name}/{sample_name}_{apa_method}_normalized_matrix.qs")
 normalize_apa_matrix <- qs::qread(apa_normalization_file, nthreads = core_num)
 
 apa_total <- normalize_apa_matrix %>% 

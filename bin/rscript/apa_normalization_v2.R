@@ -4,10 +4,6 @@
 library(dplyr, quietly = T, warn.conflicts = F)
 library(argparse, quietly = T, warn.conflicts = F)
 
-# function ----------------------------------------------------------------
-import::here("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/bin/rscript/benchmark_functions.R", 
-             generate_cell_list, apa_matrix_extract)
-
 # parameters --------------------------------------------------------------
 parser <- ArgumentParser(description='Normalize APA matrix')
 
@@ -35,7 +31,12 @@ parser$add_argument('--nthreads',
                     type='integer',
                     default=8,
                     help='the number of threads (default: 8)')
-
+parser$add_argument('--pipelinedir', 
+                    dest='pipelinedir',
+                    action='store',
+                    default='.',
+                    help='the pipeline folder')
+					
 args <- parser$parse_args()
 
 ## input load once
@@ -44,17 +45,25 @@ sample_name <- args[["sample_name"]]
 apa_method <- args[["method"]] 
 apa_mat_file <- args[["APAdir"]]
 annot_file <- args[["APAannotation"]]
+pipeline_dir <- args[["pipelinedir"]]
+
 scale_factor <- 10000
 
+# function ----------------------------------------------------------------
+import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), 
+             generate_cell_list, apa_matrix_extract)
+			 
+# data --------------------------------------------------------------------
+
 ## cell metadata (load once)
-cell_metadata_file <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs")
+cell_metadata_file <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs")
 
 cell_ids <- qs::qread(file = cell_metadata_file, nthreads = core_num) %>% 
   dplyr::mutate(cell_ids = gsub("-1", "", cell_ids)) %>% # need to REMOVE "-1" if not remove before
   dplyr::pull(cell_ids)
 
-# data --------------------------------------------------------------------
-illumina_matrix <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_illumina_counts_sparseMartix.qs")
+## short reads
+illumina_matrix <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_illumina_counts_sparseMartix.qs")
 illumina_matrix <- qs::qread(illumina_matrix, nthreads = core_num)
 
 colnames(illumina_matrix) <- gsub("-1", "", colnames(illumina_matrix))

@@ -69,7 +69,11 @@ parser$add_argument('--celltype',
                     default="all",
                     help='Users can choose at which level to generate ground-truth data, 
                     such as pseudo (all), cell type name.')
-
+parser$add_argument('--pipelinedir', 
+                    dest='pipelinedir',
+                    action='store',
+                    default='.',
+                    help='the pipeline folder')
 args <- parser$parse_args()
 
 # inputs ------------------------------------------------------------------
@@ -80,11 +84,11 @@ sample_name <- args[["sample_name"]]
 nanopore_normalization_file <- args[["ground_truth"]]
 core_num <- args[["nthreads"]]
 cell_type <- args[["cell_type"]] # all/ct/sc
-
+pipeline_dir <- args[["pipelinedir"]]
 normalization = TRUE
 
 # method1 -----------------------------------------------------------------
-cell_metadata_file <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs") 
+cell_metadata_file <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs") 
 cell_metadata <- qs::qread(file = cell_metadata_file, nthreads = core_num) %>% dplyr::mutate(cell_ids = gsub("-1", "", cell_ids)) # need to REMOVE "-1" if not remove before
 
 if(isTRUE(cell_type == "all")){
@@ -109,7 +113,7 @@ if(isTRUE(normalization)){
 
 } else {
   # raw UMI coutns
-  nanopore_file <-  glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_isomatrix.txt.gz") 
+  nanopore_file <-  glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_isomatrix.txt.gz") 
   
   nanopore_matrix <- vroom::vroom(nanopore_file, show_col_types = F) %>% 
     tidyr::unite(col = gene_name, c("geneId", "transcriptId"), sep = ":", remove = T) %>% 

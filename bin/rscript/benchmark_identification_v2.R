@@ -4,13 +4,6 @@ library(dplyr, warn.conflicts = F)
 suppressPackageStartupMessages(library(GenomicRanges, warn.conflicts = F))
 library(argparse, warn.conflicts = F)
 
-# functions ---------------------------------------------------------------
-import::here("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/bin/rscript/benchmark_functions.R", 
-             generate_cell_list,
-             peak2bed, 
-             bed2gr, 
-             find_overlap_sites_per_gene)
-
 # parameters --------------------------------------------------------------
 parser <- ArgumentParser(description='Identification performance')
 
@@ -66,7 +59,11 @@ parser$add_argument('--cv',
                     action='store',
                     default="none",
                     help='Users can choose CV cutoff.')
-
+parser$add_argument('--pipelinedir', 
+                    dest='pipelinedir',
+                    action='store',
+                    default='.',
+                    help='the pipeline folder')
 args <- parser$parse_args()
 
 ## input load once
@@ -81,23 +78,30 @@ cell_type <- args[["cell_type"]] # all/ct/sc
 win_size <- args[["win"]]
 cv_cutoff <- args[["cv"]]
 gene_list <- args[["gene_list"]]
+pipeline_dir <- args[["pipelinedir"]]
 
 single_tail_compare <- FALSE
 multi_tail_compare <- FALSE 
 search_top_gene <- FALSE 
 apa_top_gene_num <- 0 
 
+# functions ---------------------------------------------------------------
+import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), 
+             generate_cell_list,
+             peak2bed, 
+             bed2gr, 
+             find_overlap_sites_per_gene)
 # pre-load data -----------------------------------------------------------
 ## cell metadata (load once)
-cell_metadata_file <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs") #"E18_cell_expression_annotated.qs"
+cell_metadata_file <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs") #"E18_cell_expression_annotated.qs"
 cell_metadata <- qs::qread(file = cell_metadata_file, nthreads = core_num) %>% dplyr::mutate(cell_ids = gsub("-1", "", cell_ids)) # need to REMOVE "-1" if not remove before
 cell_ids <- generate_cell_list(cell_metadata = cell_metadata, type = cell_type, core_num = core_num)
 cell_ids <- cell_ids[[cell_type]]
 
 ## ground truth
-mm10_cr_gtf <- qs::qread("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/reference/mm10_cr_annot.qs", nthreads = core_num)
+mm10_cr_gtf <- qs::qread(glue::glue("{pipeline_dir}/reference/mm10_cr_annot.qs"), nthreads = core_num)
 
-nanopore_total <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_isomatrix.txt.gz") %>% 
+nanopore_total <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_isomatrix.txt.gz") %>% 
   vroom::vroom(., show_col_types = F) %>%
   dplyr::mutate(
     transcriptId = gsub("\\.[0-9]{1,2}", "", transcriptId),
@@ -138,7 +142,7 @@ if(cv_cutoff == "none"){
   print("No CV filter for ONT data!")
   
 } else {
-  isoform_table_file <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/APA_benchmark_tests/output/apa_annotation/{sample_name}/{sample_name}_{cell_type}_normalized_nanopore_isoform_table.qs")
+  isoform_table_file <- glue::glue("{pipeline_dir}/output/apa_annotation/{sample_name}/{sample_name}_{cell_type}_normalized_nanopore_isoform_table.qs")
 
   cv_cutoff <- as.numeric(cv_cutoff)
   transcript_ids <- qs::qread(file = isoform_table_file, nthreads = core_num) %>%
@@ -152,7 +156,7 @@ if(cv_cutoff == "none"){
 
 # read APA data -----------------------------------------------------------
 ## input change every time
-# apa_dir <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina") 
+# apa_dir <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina") 
 
 ### apa expression matrix
 

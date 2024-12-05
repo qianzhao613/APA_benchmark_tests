@@ -4,8 +4,6 @@
 # load library ------------------------------------------------------------
 library(dplyr, warn.conflicts = F)
 library(argparse, warn.conflicts = F) # 2.2.2
-# import functions --------------------------------------------------------
-import::here("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/bin/rscript/benchmark_functions.R", generate_cell_list)
 
 # parameters --------------------------------------------------------------
 parser <- ArgumentParser(description='Generate nanopore identification benchmark data')
@@ -31,7 +29,11 @@ parser$add_argument('--celltype',
                     action='store',
                     default="all",
                     help='Users can choose at which level to generate ground-truth data, such as pseudo (all), cell type (ct), or  single cell (sc).')
-
+parser$add_argument('--pipelinedir', 
+                    dest='pipelinedir',
+                    action='store',
+                    default='.',
+                    help='the pipeline folder')
 args <- parser$parse_args()
 
 
@@ -42,19 +44,26 @@ core_num <- args[["nthreads"]]
 sample_name <- args[["sample_name"]] #"MOBV1" "E18" MOBV1  args[1] 
 nanopore_reads_cutoff <- args[["nanopore_cutoff"]] # 0, 3, 5, 10, 15, 20, 25, 30
 cell_type <- args[["cell_type"]] # all/ct/sc
+pipeline_dir <- args[["pipelinedir"]]
 
 # reference annotation [gene + peakID]
-mm10_cr_gtf <- qs::qread("reference/mm10_cr_annot.qs", nthreads = core_num)
+mm10_cr_gtf <- qs::qread(glue::glue("{pipeline_dir}/reference/mm10_cr_annot.qs"), nthreads = core_num)
 
+# import functions --------------------------------------------------------
+import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), generate_cell_list)
+
+
+# import data --------------------------------------------------------
 # cell metadata [cell_ids + counts_nanopore + counts_without_introns + seurat_clusters]
-cell_metadata_file <- glue::glue("/mnt/mr01-home01/m57549qz/scratch/nextflow_test/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs")
+cell_metadata_file <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs")
 cell_metadata <- qs::qread(file = cell_metadata_file, nthreads = core_num) %>% dplyr::mutate(cell_ids = gsub("-1", "", cell_ids)) # REMOVE "-1" if not remove before in case some outputs do not have "-1"
 
 cell_ids <- generate_cell_list(cell_metadata = cell_metadata, type = cell_type, core_num = core_nums)
 
 ## read nanopore count matrix
-nanopore_matrix <- vroom::vroom(glue::glue("~/nanopore_validation/{sample_name}_illumina/{sample_name}_isomatrix.txt"), show_col_types = F)
 
+nanopore_file <-  glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_isomatrix.txt.gz") 
+nanopore_matrix <- vroom::vroom(nanopore_file, show_col_types = F)
 
 ## calucalte total
 nanopore_total_counts <- lapply(names(cell_ids), function(x){
@@ -77,12 +86,3 @@ nanopore_total_counts <- lapply(names(cell_ids), function(x){
   qs::qsave(nanopore_total, file = nanopore_output_file, nthreads = core_nums)
   
 })
-
-# output files ------------------------------------------------------------
-# output_dir <- glue::glue("~/nanopore_validation/identification_validation/ground_truth/{sample_name}")
-# 
-# if(!file.exists(output_dir)){
-#   
-#   dir.create(output_dir, recursive = T)
-#   
-# }
