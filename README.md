@@ -32,14 +32,15 @@ The pipeline is divided into two main parts:
 
 This pipeline consists of four directories: 
 
-	+ bin: R scripts 
-	+ modules: Nextflow processes 
-	+ Reference: annotation files (gtf and fasta) from Cell Ranger 
-	+ data: store the required sample data, named in the format ${sample_name}_illumina. The sample data includes: 
-		- outputs from various APA analysis methods, 
-		- Illumina data (from Cell Ranger), 
-		- ONT data, 
-		- metadata.
++ bin: R scripts 
++ modules: Nextflow processes 
++ Reference: annotation files (gtf and fasta) from Cell Ranger 
++ data: store the required sample data, named in the format ${sample_name}_illumina. The sample data includes: 
+	- outputs from various APA analysis methods, 
+	- Illumina data (from Cell Ranger), 
+	- ONT data, 
+	- metadata.
+
 		
 ## Usage
 
