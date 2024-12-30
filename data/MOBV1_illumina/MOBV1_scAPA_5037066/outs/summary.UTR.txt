@@ -1,0 +1,2 @@
+Number of peaks passed fillter:	 13772 
+Number of significant (FDR < 5%) APA events: 1749 
