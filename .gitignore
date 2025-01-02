@@ -5,8 +5,3 @@
 *.fastq
 *.fasta
 *.fa.gz
-*.gff
-*.db
-*.Rds
-*.rds
-*.bed

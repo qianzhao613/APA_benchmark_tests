@@ -50,8 +50,7 @@ pipeline_dir <- args[["pipelinedir"]]
 mm10_cr_gtf <- qs::qread(glue::glue("{pipeline_dir}/reference/mm10_cr_annot.qs"), nthreads = core_num)
 
 # import functions --------------------------------------------------------
-import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), generate_cell_list)
-
+import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), "generate_cell_list", .character_only = TRUE)
 
 # import data --------------------------------------------------------
 # cell metadata [cell_ids + counts_nanopore + counts_without_introns + seurat_clusters]

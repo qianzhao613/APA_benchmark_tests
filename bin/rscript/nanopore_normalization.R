@@ -11,7 +11,6 @@ parser$add_argument('--sample',
                     dest='sample_name',
                     action='store',
                     help='the sample name (eg. MOBV1)')
-
 parser$add_argument('--nthreads', 
                     dest='nthreads',
                     action='store',

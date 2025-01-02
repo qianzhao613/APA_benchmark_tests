@@ -87,10 +87,11 @@ apa_top_gene_num <- 0
 
 # functions ---------------------------------------------------------------
 import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), 
-             generate_cell_list,
-             peak2bed, 
-             bed2gr, 
-             find_overlap_sites_per_gene)
+             "generate_cell_list",
+             "peak2bed", 
+             "bed2gr", 
+             "find_overlap_sites_per_gene", 
+			 .character_only = TRUE)
 # pre-load data -----------------------------------------------------------
 ## cell metadata (load once)
 cell_metadata_file <- glue::glue("{pipeline_dir}/data/{sample_name}_illumina/{sample_name}_cell_expression_annotated.qs") #"E18_cell_expression_annotated.qs"

@@ -99,11 +99,12 @@ mm10_cr_gtf <- qs::qread(glue::glue("{pipeline_dir}/reference/mm10_cr_annot.qs")
 
 # functions ---------------------------------------------------------------
 import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), 
-             apa_matrix_extract,
-             generate_cell_list,
-             peak2bed, 
-             bed2gr,
-             matched_sites_expression)
+             "apa_matrix_extract",
+             "generate_cell_list",
+             "peak2bed", 
+             "bed2gr",
+             "matched_sites_expression",
+			 .character_only = TRUE)
 
 # cell metadata ---------------------------------------------------------
 

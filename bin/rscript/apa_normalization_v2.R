@@ -51,7 +51,7 @@ scale_factor <- 10000
 
 # function ----------------------------------------------------------------
 import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), 
-             generate_cell_list, apa_matrix_extract)
+             "generate_cell_list", "apa_matrix_extract", .character_only = TRUE)
 			 
 # data --------------------------------------------------------------------
 

@@ -81,7 +81,12 @@ apa_top_gene_num <- 0
 
 # functions ---------------------------------------------------------------
 import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"),
-             create_pseudobulk, two_cluster_deseq2, bed2gr, peak2bed, matched_sites_expression)
+             "create_pseudobulk", 
+			 "two_cluster_deseq2", 
+			 "bed2gr", 
+			 "peak2bed", 
+			 "matched_sites_expression", 
+			 .character_only = TRUE)
 			 
 # annotation and metadata -------------------------------------------------
 mm10_cr_gtf <- qs::qread(glue::glue("{pipeline_dir}/reference/mm10_cr_annot.qs"), nthreads = core_num)

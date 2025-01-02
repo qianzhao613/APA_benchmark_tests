@@ -53,7 +53,7 @@ core_num <- args[["nthreads"]]
 pipeline_dir <- args[["pipelinedir"]]
 # functions ---------------------------------------------------------------
 import::here(glue::glue("{pipeline_dir}/bin/rscript/benchmark_functions.R"), 
-             apa_annotation)
+             "apa_annotation", .character_only = TRUE)
 			 
 # scape annotation -------------------------------------------------------------------
 # # It will consume a lot of time if it is the first time to annotate.
